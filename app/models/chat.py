@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Literal
 from pydantic import BaseModel, Field
 from bson import ObjectId
 
@@ -20,14 +20,13 @@ class PyObjectId(str):
         raise ValueError("Invalid ObjectId")
 
 
-class DocumentModel(BaseModel):
-    """MongoDB Document document model."""
+class ChatModel(BaseModel):
+    """MongoDB Chat document model."""
     
     id: Optional[PyObjectId] = Field(default=None, alias="_id")
     project_id: PyObjectId
-    filename: str
-    file_type: str
-    text_content: str
+    role: Literal["user", "assistant"]
+    message: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Config:
@@ -36,22 +35,20 @@ class DocumentModel(BaseModel):
         json_encoders = {ObjectId: str}
 
 
-class DocumentCreate(BaseModel):
-    """Schema for creating a new document."""
+class ChatCreate(BaseModel):
+    """Schema for creating a new chat message."""
     
-    filename: str
-    file_type: str
-    text_content: str
+    role: Literal["user", "assistant"]
+    message: str
 
 
-class DocumentResponse(BaseModel):
-    """Schema for document response."""
+class ChatResponse(BaseModel):
+    """Schema for chat response."""
     
     id: str = Field(alias="_id")
     project_id: str
-    filename: str
-    file_type: str
-    text_content: str
+    role: Literal["user", "assistant"]
+    message: str
     created_at: datetime
 
     class Config:
