@@ -24,7 +24,7 @@ class DocumentModel(BaseModel):
     """MongoDB Document document model."""
     
     id: Optional[PyObjectId] = Field(default=None, alias="_id")
-    project_id: PyObjectId
+    project_id: Optional[PyObjectId] = None
     filename: str
     file_type: str
     text_content: str
@@ -42,6 +42,12 @@ class DocumentCreate(BaseModel):
     filename: str
     file_type: str
     text_content: str
+
+
+class DocumentUpdate(BaseModel):
+    """Schema for updating document metadata (partial)."""
+    name: Optional[str] = None
+    project_id: Optional[str] = None
 
 
 class DocumentResponse(BaseModel):
