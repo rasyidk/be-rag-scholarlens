@@ -14,11 +14,6 @@ def _now_utc() -> datetime:
 
 
 def create_access_token(subject: str, expires_minutes: int = None) -> Tuple[str, int]:
-    """Create a JWT access token.
-
-    Returns tuple (token, expires_in_seconds).
-    """
-    print(subject)
     if expires_minutes is None:
         expires_minutes = settings.ACCESS_TOKEN_EXPIRE_MINUTES
     now = _now_utc()
@@ -44,10 +39,6 @@ def create_access_token(subject: str, expires_minutes: int = None) -> Tuple[str,
 
 
 def create_refresh_token(subject: str, expires_days: int = None) -> Tuple[str, int]:
-    """Create a JWT refresh token.
-
-    Returns tuple (token, expires_in_seconds).
-    """
     if expires_days is None:
         expires_days = settings.REFRESH_TOKEN_EXPIRE_DAYS
     now = _now_utc()
@@ -74,4 +65,6 @@ def create_refresh_token(subject: str, expires_days: int = None) -> Tuple[str, i
 
 def decode_token(token: str) -> dict:
     """Decode and verify a JWT token. Raises jwt exceptions on failure."""
-    return jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+    # Allow a configurable leeway to account for clock skew between systems.
+    leeway = getattr(settings, "JWT_LEEWAY", 60)
+    return jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM], leeway=leeway)
