@@ -1,11 +1,10 @@
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr, constr
 from bson import ObjectId
 
 
 class PyObjectId(str):
-    """Custom type for handling MongoDB ObjectId."""
     
     @classmethod
     def __get_validators__(cls):
@@ -20,14 +19,13 @@ class PyObjectId(str):
         raise ValueError("Invalid ObjectId")
 
 
-class UserModel(BaseModel):
-    """MongoDB User document model."""
-    
+class UserModel(BaseModel): 
+
     id: Optional[PyObjectId] = Field(default=None, alias="_id")
     name: str
     email: str
     password_hash: str
-    email_verified: bool = False
+    email_verified: bool = True
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Config:
@@ -41,12 +39,28 @@ class UserCreate(BaseModel):
     
     name: str
     email: EmailStr
-    password: str
-    email_verified: bool = False
+    password: constr(min_length=8)
+    email_verified: bool = True
+    
+    @classmethod
+    def validate_password(cls, value):
+        import re
+        if not re.search(r'[A-Z]', value):
+            raise ValueError('Password must contain at least one uppercase letter')
+        if not re.search(r'\d', value):
+            raise ValueError('Password must contain at least one digit')
+        if not re.search(r'[^A-Za-z0-9]', value):
+            raise ValueError('Password must contain at least one symbol')
+        return value
+
+    # For Pydantic v1
+    from pydantic import validator
+    @validator('password')
+    def password_complexity(cls, v):
+        return cls.validate_password(v)
 
 
 class UserResponse(BaseModel):
-    """Schema for user response (without password)."""
     
     id: str = Field(alias="_id")
     name: str
@@ -56,3 +70,13 @@ class UserResponse(BaseModel):
 
     class Config:
         populate_by_name = True
+
+
+class LoginRequest(BaseModel):
+  
+    email: EmailStr
+    password: constr(min_length=1)
+
+
+class LogoutRequest(BaseModel):
+    refresh_token: str

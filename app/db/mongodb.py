@@ -2,6 +2,7 @@ from pymongo import MongoClient, ASCENDING
 from pymongo.database import Database
 from pymongo.collection import Collection
 from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
+from typing import Optional
 from app.core.config import get_settings
 
 # Database name
@@ -12,13 +13,26 @@ USERS_COLLECTION = "users"
 PROJECTS_COLLECTION = "projects"
 DOCUMENTS_COLLECTION = "documents"
 CHATS_COLLECTION = "chats"
+BLACKLIST_COLLECTION = "jwt_blacklist"
 
 
 def get_mongodb_client() -> MongoClient:
     """Create and return a MongoDB client."""
     settings = get_settings()
-    client = MongoClient(settings.MONGODB_URI)
-    return client
+    global _mongo_client
+    try:
+        _client = globals().get("_mongo_client")
+        if _client is None:
+            _client = MongoClient(
+                settings.MONGODB_URI,
+                serverSelectionTimeoutMS=5000,
+                connectTimeoutMS=10000,
+                socketTimeoutMS=20000,
+            )
+            globals()["_mongo_client"] = _client
+        return _client
+    except Exception:
+        raise
 
 
 def get_database() -> Database:
@@ -49,6 +63,12 @@ def get_chats_collection() -> Collection:
     """Get the chats collection."""
     db = get_database()
     return db[CHATS_COLLECTION]
+
+
+def get_blacklist_collection() -> Collection:
+    """Get the JWT blacklist collection."""
+    db = get_database()
+    return db[BLACKLIST_COLLECTION]
 
 
 def test_mongodb_connection() -> dict:
@@ -103,6 +123,11 @@ def init_collections() -> dict:
         # Create chats collection with project_id and created_at index
         chats = db[CHATS_COLLECTION]
         chats.create_index([("project_id", ASCENDING), ("created_at", ASCENDING)])
+
+        # Create JWT blacklist collection with TTL on expires_at
+        blacklist = db[BLACKLIST_COLLECTION]
+        # expireAfterSeconds=0 means document expires at the time in 'expires_at'
+        blacklist.create_index([("expires_at", ASCENDING)], expireAfterSeconds=0)
         
         return {
             "status": "success",
