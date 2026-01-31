@@ -1,8 +1,11 @@
 from fastapi import APIRouter, BackgroundTasks
 from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends
 from fastapi.encoders import jsonable_encoder
 from app.models.user import UserCreate, LoginRequest, LogoutRequest
 from app.services.user_service import create_user, set_email_verified, authenticate_user
+from app.services.user_service import get_user as svc_get_user
+from app.core.dependencies import get_current_user_id
 from app.utils.response import success_response, error_response
 from app.core.security import create_access_token, decode_token
 from app.db.mongodb import get_blacklist_collection
@@ -54,6 +57,17 @@ def logout(payload: LogoutRequest):
     except Exception as e:
         svc_resp = error_response(message="Logout failed", errors=[str(e)], code=500)
 
+    if svc_resp.get("status") == "success":
+        resp = success_response(message=svc_resp.get("message"), data=svc_resp.get("data"), code=svc_resp.get("code", 200))
+    else:
+        resp = error_response(message=svc_resp.get("message"), errors=svc_resp.get("errors", []), code=svc_resp.get("code", 400))
+    return JSONResponse(content=jsonable_encoder(resp), status_code=resp.get("code", 200))
+
+
+@router.get("/profile")
+def profile(user_id: str = Depends(get_current_user_id)):
+    """Return current authenticated user's profile (name, email, etc)."""
+    svc_resp = svc_get_user(user_id)
     if svc_resp.get("status") == "success":
         resp = success_response(message=svc_resp.get("message"), data=svc_resp.get("data"), code=svc_resp.get("code", 200))
     else:

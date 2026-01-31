@@ -177,3 +177,24 @@ def logout(refresh_token: str):
             errors=[str(e)],
             code=500,
         )
+
+
+def get_user(user_id: str):
+    """Retrieve user profile by id and return standardized response."""
+    users = get_users_collection()
+    try:
+        from bson import ObjectId
+
+        if ObjectId.is_valid(user_id):
+            user_doc = users.find_one({"_id": ObjectId(user_id)})
+        else:
+            user_doc = users.find_one({"_id": user_id})
+
+        if not user_doc:
+            return error_response(message="User not found", errors=["No user with given id"], code=404)
+
+        user_doc["_id"] = str(user_doc.get("_id"))
+        user_response = UserResponse(**user_doc)
+        return success_response(message="User fetched", data=user_response.dict(by_alias=True), code=200)
+    except Exception as e:
+        return error_response(message="Failed to fetch user", errors=[str(e)], code=500)
