@@ -48,7 +48,6 @@ def get_users_collection() -> Collection:
 
 
 def get_projects_collection() -> Collection:
-    """Get the projects collection."""
     db = get_database()
     return db[PROJECTS_COLLECTION]
 

@@ -10,7 +10,7 @@ settings = get_settings()
 
 
 def _now_utc() -> datetime:
-    return datetime.utcnow()
+    return datetime.now()
 
 
 def create_access_token(subject: str, expires_minutes: int = None) -> Tuple[str, int]:

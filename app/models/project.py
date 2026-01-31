@@ -42,6 +42,13 @@ class ProjectCreate(BaseModel):
     description: Optional[str] = None
 
 
+class ProjectUpdate(BaseModel):
+    """Schema for updating a project (partial). All fields optional."""
+
+    name: Optional[str] = None
+    description: Optional[str] = None
+
+
 class ProjectResponse(BaseModel):
     """Schema for project response."""
     

@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     # JWT / auth settings
     JWT_SECRET_KEY: str = "CHANGE_ME_REPLACE_WITH_STRONG_SECRET"
     JWT_ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 100
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
     # Allow small clock skew tolerance in seconds when verifying tokens
     JWT_LEEWAY: int = 60
